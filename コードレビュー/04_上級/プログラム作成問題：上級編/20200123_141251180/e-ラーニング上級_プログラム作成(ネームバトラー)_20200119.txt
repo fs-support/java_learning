@@ -1,0 +1,816 @@
+名前：大林 達矢
+日付：20/1/19
+
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.util.ArrayList;
+import java.util.Random;
+import java.util.Scanner;
+
+//プレイヤークラス(各種ジョブの基底クラス)
+public class Player {
+	// =======================
+	// フィールド変数
+	// =======================
+	protected String name; // 名前
+	protected int hp; // HP
+	protected int mp; // MP
+	protected int str; // 攻撃力
+	protected int def; // 防御力
+	protected int luck; // 運
+	protected int agi; // 素早さ
+	protected int maxhp; // 最大HP
+	protected String state; // 状態
+	static Random rnd = new Random();
+
+	// =======================
+	// コンストラクタ
+	// =======================
+	/**
+	 * コンストラクタ
+	 *
+	 * @param name
+	 *            : プレイヤー名
+	 */
+	public Player(String name) {
+		this.name = name;
+
+		// キャラクターのパラメータ生成
+		MakeCharacter();
+	}
+
+	// =======================
+	// Getter / Setter
+	// =======================
+	/**
+	 * プレイヤー名を取得する
+	 *
+	 * @return プレイヤー名
+	 */
+	String GetName() {
+		return this.name;
+	}
+
+	/**
+	 * 現在HPを取得する
+	 *
+	 * @return 現在HP
+	 */
+	public int GetHP() {
+		return this.hp;
+	}
+
+	/**
+	 * 現在MPを取得する
+	 *
+	 * @return 現在MP
+	 */
+	public int GetMP() {
+		return this.mp;
+	}
+
+	/**
+	 * 攻撃力を取得する
+	 *
+	 * @return 攻撃力
+	 */
+	public int GetSTR() {
+		return this.str;
+	}
+
+	/**
+	 * 防御力を取得する
+	 *
+	 * @return 防御力
+	 */
+	public int GetDEF() {
+		return this.def;
+	}
+
+	/**
+	 * 運を取得する
+	 *
+	 * @return 運
+	 */
+	public int GetLUCK() {
+		return this.luck;
+	}
+
+	/**
+	 * 素早さを取得する
+	 *
+	 * @return 素早さ
+	 */
+	public int GetAGI() {
+		return this.agi;
+	}
+
+	/**
+	 * 最大HPを取得する
+	 *
+	 * @return 最大HP
+	 */
+	public int GetMAXHP() {
+		return this.maxhp;
+	}
+
+	/**
+	 * 現在の状態を取得する
+	 *
+	 * @return 状態
+	 */
+	public String GetSTATE() {
+		return this.state;
+	}
+
+	// =======================
+	// protected メソッド
+	// =======================
+	/**
+	 * 名前(name)からキャラクターに必要なパラメータを生成する
+	 */
+	protected void MakeCharacter() {
+		// ジョブごとにオーバーライドして処理を記述してください
+	}
+
+	/**
+	 * ハッシュダイジェストから数値を取り出す
+	 *
+	 * @param name
+	 *            ：名前
+	 * @param index
+	 *            : 何番目の数値を取り出すか
+	 * @return 数値(0～255)
+	 */
+	public static Integer GetNumber(String name, Integer index) {
+		try {
+			byte[] result = MessageDigest.getInstance("SHA-1").digest(
+					name.getBytes());
+			String digest = String.format("%040x", new BigInteger(1, result));
+			String hex = digest.substring(index * 2, index * 2 + 2);
+			return Integer.parseInt(hex, 16);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return 0;
+	}
+	
+	// =======================
+	// public メソッド
+	// =======================
+	/**
+	 * 現在のステータスを System.out で表示する
+	 */
+	public void PrintStatus() {
+		System.out
+				.printf("%s (HP=%3d : MP=%3d : STR=%3d : DEF=%3d : LUCK=%3d : AGI=%3d)\n",
+						this.GetName(), this.GetHP(), this.GetMP(),
+						this.GetSTR(), this.GetDEF(), this.GetLUCK(),
+						this.GetAGI());
+		System.out.println("状態 : " + GetSTATE());
+	}
+
+	/**
+	 * 対象プレイヤーに攻撃を行う
+	 *
+	 * @param defender
+	 *            : 対象プレイヤー
+	 */
+	public void Attack(Player defender) {
+		// ジョブごとにオーバーライドして処理を記述してください
+	}
+
+	/**
+	 * 対象プレイヤー(target)に対して与える直接ダメージを計算する
+	 *
+	 * @param target
+	 *            : 対象プレイヤー
+	 * @return ダメージ値(0～)
+	 */
+	protected int CalcDamage(Player target) {
+		int damage;
+		int critical;
+
+		// 乱数を使うための準備
+		Random random = new Random();
+
+		// 会心の一撃が出たか
+		// 会心の一撃は攻撃力がそのままダメージに!
+		critical = random.nextInt(100);
+		if (critical <= GetLUCK()) {
+			System.out.println("会心の一撃!");
+			damage = GetSTR();
+		} else {
+			damage = GetSTR() - target.GetDEF();
+		}
+
+		if (damage < 0) {
+			damage = 0;
+		}
+		return damage;
+	}
+
+	/**
+	 * 対象プレイヤー(target)に対して与える魔法ダメージを計算する
+	 *
+	 * @param target
+	 *            : 対象プレイヤー
+	 * @return ダメージ値(0～)
+	 */
+	protected int MagiDamage(Player target) {
+		int damage;
+
+		// 乱数を使うための準備
+		Random random = new Random();
+
+		// 魔法によるダメージ計算
+		damage = random.nextInt(21) + 10;
+
+		return damage;
+	}
+
+	/**
+	 * ダメージを受ける
+	 *
+	 * @param damage
+	 *            damage : ダメージ値
+	 */
+	protected void Damage(int damage) {
+		// ダメージ値分、HPを減少させる
+		this.hp = Math.max(this.GetHP() - damage, 0);
+	}
+
+	/**
+	 * 対象プレイヤー(target)に対して、ステータスを麻痺状態にする target : 対象プレイヤー
+	 */
+	protected void Paralysys(Player target) {
+		// ステータスを麻痺状態にする
+		this.state = "麻痺";
+	}
+
+	/**
+	 * 対象プレイヤー(target)に対して、ステータスを毒状態にする target : 対象プレイヤー
+	 */
+	protected void Poisn(Player target) {
+		// ステータスを毒状態にする
+		this.state = "毒";
+	}
+
+	/**
+	 * 対象プレイヤーが麻痺状態のとき
+	 */
+	protected int Freeze() {
+		int freeze;
+
+		// 乱数を使うための準備
+		Random random = new Random();
+
+		freeze = random.nextInt(100);
+
+		return freeze;
+	}
+}
+
+// プレイヤー：戦士
+class Fighter extends Player {
+
+	// =======================
+	// コンストラクタ
+	// =======================
+	public Fighter(String name) {
+		super(name);
+	}
+
+	/**
+	 * 名前(name)からキャラクターに必要なパラメータを生成する
+	 */
+	@Override
+	protected void MakeCharacter() {
+		// 戦士のパラメータを名前から生成する
+		this.hp = GetNumber(name, 0) * 200 / 255 + 100;
+		this.mp = GetNumber(name, 1) * 0;
+		this.str = GetNumber(name, 2) * 70 / 255 + 30;
+		this.def = GetNumber(name, 3) * 70 / 255 + 30;
+		this.luck = GetNumber(name, 4) * 100 / 255;
+		this.agi = GetNumber(name, 5) * 49 / 255 + 1;
+		this.maxhp = this.hp;
+		this.state = "通常";
+	}
+
+	/**
+	 * 対象プレイヤーに攻撃を行う
+	 *
+	 * @param defender
+	 *            : 対象プレイヤー
+	 */
+	@Override
+	public void Attack(Player defender) {
+
+		// ステータスが麻痺の場合、20%の確率で攻撃を行わない
+		if (GetSTATE() == "麻痺") {
+			int freeze = Freeze();
+
+			if (0 <= freeze && freeze <= 19) {
+				System.out.println(GetName() + "は、体がしびれて動けない!");
+				return;
+			}
+		}
+		// 与えるダメージを求める
+		System.out.println(GetName() + "の攻撃！");
+		int damage = CalcDamage(defender);
+
+		// 求めたダメージを対象プレイヤーに与える
+		System.out.println(defender.GetName() + "に" + damage + "のダメージ！");
+		defender.Damage(damage);
+
+		// ステータスが毒の場合
+		if (GetSTATE() == "毒") {
+			System.out.println(this.name + "は毒により、20ダメージ!");
+			this.hp -= 20;
+		}
+
+		// 倒れた判定
+		if (defender.GetHP() <= 0) {
+			System.out.println(defender.GetName() + "は力尽きた...");
+		}
+	}
+}
+
+class Magic {
+	private String maginame; // 魔法名
+	private int effect; // 効果
+	private int consMP; // 消費MP
+
+	// コンストラクタ
+	Magic(String maginame, int effect, int consMP) {
+		this.maginame = maginame;
+		this.effect = effect;
+		this.consMP = consMP;
+	}
+
+	// 魔法名を取得する
+	String MagiName() {
+		return maginame;
+	}
+
+	// 効果を取得する
+	int Effect() {
+		return effect;
+	}
+
+	// 消費MPを取得する
+	int ConsMP() {
+		return consMP;
+	}
+}
+
+// プレイヤー：魔法使い
+class Wizard extends Player {
+	private static ArrayList<Magic> magicList = new ArrayList<Magic>(); // インスタンス化した魔法クラスを格納しておくリスト
+	private static Magic[] getMagic = new Magic[1];
+	static Random rnd = new Random();
+
+	// =======================
+	// コンストラクタ
+	// =======================
+	public Wizard(String name) {
+		super(name);
+	}
+	
+	// =======================
+	// protected メソッド
+	/**
+	 * 名前(name)からキャラクターに必要なパラメータを生成する
+	 */
+	@Override
+	protected void MakeCharacter() {
+		// 魔法使いのパラメータを名前から生成する
+		this.hp = GetNumber(name, 0) * 100 / 255 + 50;
+		this.mp = GetNumber(name, 1) * 50 / 255 + 30;
+		this.str = GetNumber(name, 2) * 50 / 255;
+		this.def = GetNumber(name, 3) * 50 / 255;
+		this.luck = GetNumber(name, 4) * 100 / 255;
+		this.agi = GetNumber(name, 5) * 40 / 255 + 20;
+		this.maxhp = this.hp;
+		this.state = "通常";
+	}
+	// =======================
+
+	/**
+	 * 対象プレイヤーに攻撃を行う
+	 *
+	 * @param defender
+	 *            : 対象プレイヤー
+	 */
+	@Override
+	public void Attack(Player defender) {
+		MakeMagicList();
+		// ステータスが麻痺の場合、20%の確率で攻撃を行わない
+		if (GetSTATE() == "麻痺") {
+			int freeze = Freeze();
+
+			if (0 <= freeze && freeze <= 19) {
+				System.out.println(GetName() + "は、体がしびれて動けない!");
+				return;
+			}
+		}
+		// MPがあれば魔法で攻撃する
+		if (GetMP() >= 10) {
+			getMagic[0] = magicList.get(rnd.nextInt(magicList.size()));
+			System.out.println(GetName() + "は" + getMagic[0].MagiName()
+					+ "を唱えた!");
+			int damage = MagiDamage(defender);
+
+			// 求めたダメージを対象プレイヤーに与える
+			System.out.println(defender.GetName() + "に" + damage + "のダメージ！");
+			defender.Damage(damage);
+
+			// 唱えた魔法に対しての、MPを消費する
+			this.mp -= getMagic[0].ConsMP();
+
+		} else { // MPがなければ、通常攻撃を行う
+			System.out.println(GetName() + "の攻撃！");
+			int damage = CalcDamage(defender);
+
+			// 求めたダメージを対象プレイヤーに与える
+			System.out.println(defender.GetName() + "に" + damage + "のダメージ！");
+			defender.Damage(damage);
+		}
+
+		// ステータスが毒の場合
+		if (GetSTATE() == "毒") {
+			System.out.println(this.name + "は毒により、20ダメージ!");
+			this.hp -= 20;
+		}
+
+		// 倒れた判定
+		if (defender.GetHP() <= 0) {
+			System.out.println(defender.GetName() + "は力尽きた...");
+		}
+	}
+
+	// =======================
+	// private メソッド
+	/**
+	 * 魔法一覧を作成するメソッド magicListにMagicをインスタンス化して詰め込む
+	 */
+	private static void MakeMagicList() {
+		magicList.add(new Magic("ファイア", 10, 10));
+		magicList.add(new Magic("サンダー", 10, 20));
+	}
+	// =======================
+}
+
+// プレイヤー：僧侶
+class Priest extends Player {
+	private static ArrayList<Magic> magicList = new ArrayList<Magic>(); // インスタンス化した魔法クラスを格納しておくリスト
+	private static Magic[] getMagic = new Magic[1];
+	static Random rnd = new Random();
+
+
+	// =======================
+	// コンストラクタ
+	// =======================
+	public Priest(String name) {
+		super(name);
+	}
+
+	// =======================
+	// protected メソッド
+	/**
+	 * 名前(name)からキャラクターに必要なパラメータを生成する
+	 */
+	@Override
+	protected void MakeCharacter() {
+		// 僧侶のパラメータを名前から生成する
+		this.hp = GetNumber(name, 0) * 120 / 255 + 80;
+		this.mp = GetNumber(name, 1) * 30 / 255 + 20;
+		this.str = GetNumber(name, 2) * 60 / 255 + 10;
+		this.def = GetNumber(name, 3) * 60 / 255 + 10;
+		this.luck = GetNumber(name, 4) * 100 / 255;
+		this.agi = GetNumber(name, 5) * 40 / 255 + 20;
+		this.maxhp = this.hp;
+		this.state = "通常";
+	}
+	// =======================
+
+	/**
+	 * 対象プレイヤーに攻撃を行う
+	 *
+	 * @param defender
+	 *            : 対象プレイヤー
+	 */
+	@Override
+	public void Attack(Player defender) {
+		MakeMagicList();
+
+		// ステータスが麻痺の場合、20%の確率で攻撃を行わない
+		if (GetSTATE() == "麻痺") {
+			int freeze = Freeze();
+
+			if (0 <= freeze && freeze <= 19) {
+				System.out.println(GetName() + "は、体がしびれて動けない!");
+				return;
+			}
+		}
+
+		// HPが減っていれば魔法で回復する
+		if (GetHP() < GetMAXHP() && GetMP() >= 10) {
+			getMagic[0] = magicList.get(rnd.nextInt(magicList.size()));
+			System.out.println(GetName() + "は" + getMagic[0].MagiName()
+					+ "を唱えた!");
+			String nowmagic = getMagic[0].MagiName();
+
+			// ヒールの場合、自分のHPを回復する
+			if (nowmagic == "ヒール") {
+				System.out.println(GetName() + "は、HPを" + getMagic[0].Effect()
+						+ "回復！");
+				this.hp = Math.min(this.hp + getMagic[0].Effect(), GetMAXHP()); // 上限を超えた場合は上限値に
+			} else if (nowmagic == "パライズ") {
+				System.out.println(defender.GetName() + "は麻痺した!");
+				defender.Paralysys(defender);
+			} else {
+				System.out.println(defender.GetName() + "は毒に侵された!");
+				defender.Poisn(defender);
+			}
+
+			// 唱えた魔法に対しての、MPを消費する
+			this.mp -= getMagic[0].ConsMP();
+		} else { // HPが減っていなければ、通常攻撃を行う
+			System.out.println(GetName() + "の攻撃！");
+			int damage = CalcDamage(defender);
+
+			// 求めたダメージを対象プレイヤーに与える
+			System.out.println(defender.GetName() + "に" + damage + "のダメージ！");
+			defender.Damage(damage);
+		}
+
+		// ステータスが毒の場合
+		if (GetSTATE() == "毒") {
+			System.out.println(this.name + "は毒により、20ダメージ!");
+			this.hp -= 20;
+		}
+
+		// 倒れた判定
+		if (defender.GetHP() <= 0) {
+			System.out.println(defender.GetName() + "は力尽きた...");
+		}
+	}
+
+	// =======================
+	// private メソッド
+	/**
+	 * 魔法一覧を作成するメソッド magicListにMagicをインスタンス化して詰め込む
+	 */
+	private static void MakeMagicList() {
+		magicList.add(new Magic("ヒール", 50, 20));
+		magicList.add(new Magic("パライズ", 20, 10));
+		magicList.add(new Magic("ポイズン", 20, 10));
+	}
+	// =======================
+
+}
+
+// プレイヤー：勇者
+class Brave extends Player {
+	private static ArrayList<Magic> magicList = new ArrayList<Magic>(); // インスタンス化した魔法クラスを格納しておくリスト
+	private static Magic[] getMagic = new Magic[1];
+	static Random rnd = new Random();
+
+	// =======================
+	// コンストラクタ
+	public Brave(String name) {
+		super(name);
+	}
+	// =======================
+
+	// =======================
+	// protected メソッド
+	/**
+	 * 名前(name)からキャラクターに必要なパラメータを生成する
+	 */
+	@Override
+	protected void MakeCharacter() {
+		// 勇者のパラメータを名前から生成する
+		this.hp = GetNumber(name, 0) * 100 / 255 + 100;
+		this.mp = GetNumber(name, 1) * 50 / 255 + 30;
+		this.str = GetNumber(name, 2) * 50 / 255 + 30;
+		this.def = GetNumber(name, 3) * 50 / 255 + 30;
+		this.luck = GetNumber(name, 4) * 100 / 255;
+		this.agi = GetNumber(name, 5) * 40 / 255 + 20;
+		this.maxhp = this.hp;
+		this.state = "通常";
+	}
+	// =======================
+
+	/**
+	 * 対象プレイヤーに攻撃を行う
+	 *
+	 * @param defender
+	 *            : 対象プレイヤー
+	 */
+	@Override
+	public void Attack(Player defender) {
+		MakeMagicList();
+
+		// ステータスが麻痺の場合、20%の確率で攻撃を行わない
+		if (GetSTATE() == "麻痺") {
+			int freeze = Freeze();
+
+			if (0 <= freeze && freeze <= 19) {
+				System.out.println(GetName() + "は、体がしびれて動けない!");
+				return;
+			}
+		}
+		// MPがあれば魔法で攻撃する
+		if (GetMP() >= 10) {
+			getMagic[0] = magicList.get(rnd.nextInt(magicList.size()));
+			System.out.println(GetName() + "は" + getMagic[0].MagiName()
+					+ "を唱えた!");
+			int damage = MagiDamage(defender);
+
+			// 求めたダメージを対象プレイヤーに与える
+			System.out.println(defender.GetName() + "に" + damage + "のダメージ！");
+			defender.Damage(damage);
+
+			// 唱えた魔法に対しての、MPを消費する
+			this.mp -= getMagic[0].ConsMP();
+
+		} else { // MPがなければ、通常攻撃を行う
+			System.out.println(GetName() + "の攻撃！");
+			int damage = CalcDamage(defender);
+
+			// 求めたダメージを対象プレイヤーに与える
+			System.out.println(defender.GetName() + "に" + damage + "のダメージ！");
+			defender.Damage(damage);
+		}
+
+		// ステータスが毒の場合
+		if (GetSTATE() == "毒") {
+			System.out.println(this.name + "は毒により、20ダメージ!");
+			this.hp -= 20;
+		}
+
+		// 倒れた判定
+		if (defender.GetHP() <= 0) {
+			System.out.println(defender.GetName() + "は力尽きた...");
+		}
+	}
+
+	// =======================
+	// private メソッド
+	/**
+	 * 魔法一覧を作成するメソッド magicListにMagicをインスタンス化して詰め込む
+	 */
+	private static void MakeMagicList() {
+		magicList.add(new Magic("ファイア", 10, 10));
+	}
+	// =======================
+}
+
+class NameBattler {
+	static Scanner sc = new Scanner(System.in);
+
+	public static void main(String[] args) {
+		// ==================================================
+		// バトル開始準備
+		// ==================================================
+		// キーボード入力するための Scanner の準備
+		Scanner stdin = new Scanner(System.in);
+
+		// ゲームの流れ
+		// 1. プレイヤー名の入力
+		// 1-1. プレイヤー1の名前を決める
+		System.out.println("プレイヤー1の名前を入力");
+		String player1Name = stdin.nextLine();
+		Player player1 = null;
+
+		// 1-2. プレイヤー1の職業を決める
+		System.out.println("プレイヤー1の職業を選択");
+		System.out.println("1.戦士、2.魔法使い、3.僧侶、4.勇者");
+		String player1Job = null;
+
+		while (true) {
+			try {
+				player1Job = sc.nextLine();
+				if (player1Job.equals("1") || player1Job.equals("2")
+						|| player1Job.equals("3") || player1Job.equals("4"))
+					break;
+				else
+					new Exception();
+			} catch (Exception e) {
+				System.out.println("適切な値を入力してください");
+			}
+		}
+		if (player1Job.equals("1"))
+			player1 = new Fighter(player1Name);
+		if (player1Job.equals("2"))
+			player1 = new Wizard(player1Name);
+		if (player1Job.equals("3"))
+			player1 = new Priest(player1Name);
+		if (player1Job.equals("4"))
+			player1 = new Brave(player1Name);
+
+		// 1-3. プレイヤー2の名前を決める
+		System.out.println("プレイヤー2の名前を入力");
+		String player2Name = stdin.nextLine();
+		Player player2 = null;
+
+		// 1-4. プレイヤー2の職業を決める
+		System.out.println("プレイヤー2の職業を選択");
+		System.out.println("1.戦士、2.魔法使い、3.僧侶、4.勇者");
+		String player2Job = null;
+
+		while (true) {
+			try {
+				player2Job = sc.nextLine();
+				if (player2Job.equals("1") || player2Job.equals("2")
+						|| player2Job.equals("3") || player1Job.equals("4"))
+					break;
+				else
+					new Exception();
+			} catch (Exception e) {
+				System.out.println("適切な値を入力してください");
+			}
+		}
+		if (player2Job.equals("1"))
+			player2 = new Fighter(player2Name);
+		if (player2Job.equals("2"))
+			player2 = new Wizard(player2Name);
+		if (player2Job.equals("3"))
+			player2 = new Priest(player2Name);
+		if (player2Job.equals("4"))
+			player2 = new Brave(player2Name);
+
+		// 3. バトル
+		// ==================================================
+		// バトル処理
+		// ==================================================
+		// バトル開始の表示
+		player1.PrintStatus();
+		player2.PrintStatus();
+		System.out.println("");
+		System.out.println("=== バトル開始 ===");
+
+		int turnNumber = 1;
+		// 最大でも20ターンまで
+		while (turnNumber <= 20) {
+			System.out.println("--------------------------------");
+			System.out.printf("- ターン%d -\n", turnNumber);
+
+			// 素早さに応じて先攻後攻の判定
+			if (player1.GetAGI() >= player2.GetAGI()) {
+				// ■プレイヤー1の攻撃ターン
+				player1.Attack(player2);
+				// プレイヤー2の敗北判定
+				if (player2.GetHP() <= 0)
+					break;
+
+				// ■プレイヤー2の攻撃ターン
+				player2.Attack(player1);
+				// プレイヤー1の敗北判定
+				if (player1.GetHP() <= 0)
+					break;
+
+			} else {
+				// ■プレイヤー2の攻撃ターン
+				player2.Attack(player1);
+				// プレイヤー1の敗北判定
+				if (player1.GetHP() <= 0)
+					break;
+
+				// ■プレイヤー1の攻撃ターン
+				player1.Attack(player2);
+				// プレイヤー2の敗北判定
+				if (player2.GetHP() <= 0)
+					break;
+
+			}
+
+			// ※④と⑤の繰り返し
+			// ターン終了時のステータスを表示
+			System.out.println("");
+			player1.PrintStatus();
+			player2.PrintStatus();
+
+			// 次のターン
+			turnNumber = turnNumber + 1;
+		}
+
+		// ⑥勝ち負けの表示(ＨＰが多い方が勝ち)
+		System.out.println("");
+		if (player1.GetHP() > player2.GetHP()) {
+			System.out.println(player1.GetName() + "の勝利！！");
+		} else {
+			System.out.println(player2.GetName() + "の勝利！！");
+		}
+
+		// ==================================================
+		// 終了処理
+		// プログラム終了前の後片付け
+		stdin.close();
+		// ==================================================
+	}
+
+}
