@@ -1,0 +1,9 @@
+/**
+ * 
+ */
+/**
+ * @author noinoi
+ *
+ */
+module noviceM {
+}
