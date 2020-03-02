@@ -1,0 +1,69 @@
+﻿package logic;
+
+import java.util.ArrayList;
+import java.util.Random;
+
+public class Logic {
+
+	public static void main(String[] args) {
+		// TODO 自動生成されたメソッド・スタブ;
+
+		//【参考】http://www.lancarse.co.jp/blog/?p=707
+
+		ArrayList<Integer> list = new ArrayList<Integer>();
+		Random random = new Random();
+
+		// ガチャの内訳
+		list.add(32); // 排出率32%
+		list.add(28); // 排出率28%
+		list.add(25); // 排出率25%
+		list.add(10); // 排出率10%
+		list.add(5);  // 排出率5%
+
+
+		///////////////////////////////////////////////////////////////////////
+		//【排出率の算出方法】
+		// ①排出対象の合計値を求める
+		// ②排出対象の種類毎に合計値でそれぞれを割る
+
+		int total = 0;	// 重み付け用の変数
+		int pick = 0;	// 排出率用の変数
+
+		// トータルの重みを計算 (ガチャ排出対象数の合計値を計算する)
+		for(int i = 0; i<list.size(); i++){
+			total+=list.get(i);
+		}
+		System.out.println("合計値：" + total + "\n");
+
+		// 動作確認 (排出率が正しくなっているかの確認)
+		for(int i = 0; i<list.size(); i++){
+			pick= list.get(i)%total;
+			System.out.println((i+1) +  "の排出率：" + pick + "%");
+		}
+		System.out.println();
+		///////////////////////////////////////////////////////////////////////
+
+
+		///////////////////////////////////////////////////////////////////////
+		//【ガチャ排出率ロジックの流れ(重み付け)】
+		// 合計値を各対象の数(重み)で減算していく
+
+		int get = 0;	// 排出された結果用の変数
+
+		// とりあえず１０連ガチャで実験。。
+		for(int i = 0; i<10; i++){
+			int x = random.nextInt(100)+1;
+			for(int j = 0; j<list.size(); j++){
+				if(x<=list.get(j)){
+					get = j;
+					break;
+				}
+				// 重みで減算していく
+				x-=list.get(j);
+			}
+			System.out.println("排出結果：" + list.get(get));
+		}
+		///////////////////////////////////////////////////////////////////////
+	}
+
+}
